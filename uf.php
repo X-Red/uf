@@ -5,6 +5,7 @@
 // Script que obtiene el valor de la UF desde el SII
 //
 // 2014-03-12 jzorrilla@x-red.com - Creo la version inicial basado en un scritp de Henry Lopez
+// 2017-10-23 jzorrilla@x-red.com - Actualizo el script para que utilice webservices desde mindicador.cl
 
 
 // Valida que exista archivo de configuracion
@@ -28,54 +29,28 @@ date_default_timezone_set('America/Santiago');
 mysql_connect($DB_SERVIDOR,$DB_USUARIO,$DB_CLAVE) or die("Imposible conectarse al servidor.");
 mysql_select_db($DB_BASE) or die("Imposible abrir Base de datos");
 
-$anio = date("Y");
+$fecha = date_create(date("Y-m-d"));
 
-$ch = curl_init(); 
+$fin = 0;
 
-curl_setopt($ch,CURLOPT_URL,$URL); 
+while (!$fin) {
+	//echo date_format($fecha, 'd-m-Y') . "\n";
+	//echo date_format($fecha,'z') . "\n";
 
-curl_setopt($ch,CURLOPT_RETURNTRANSFER,1); 
+	$jsonsource = $URL . date_format($fecha,'d-m-Y');
 
-$output = curl_exec($ch); 
+	$json = json_decode(file_get_contents($jsonsource));
 
-curl_close($ch); 
-
-$temp_array = array(); 
-
-//$search_for = '<tr\s[^>]*class="texto1">(.*)<\/tr>'; 
-$search_for = "<td style='text-align:right;'>(.*)<\/td>";
-//$search_td = array('<tr align="center" bgcolor="#F7F7F7" class="texto1">','</tr>'); 
-$search_td = array("<td style='text-align:right;'>","</td>"); 
-
-if(preg_match_all("/$search_for/siU",$output,$matches)) { 
-   foreach($matches[0] as $match) { 
-      $to_push = str_replace($search_td,'',$match);
-      $to_push = trim($to_push); 
-	  $to_push = str_replace(".","",$to_push);
-	  $to_push = str_replace(",",".",$to_push);
-      array_push($temp_array,$to_push); 
-   } 
-} 
-$mes = array("01","02","03","04","05","06","07","08","09","10","11","12");
-$dia = array("01","02","03","04","05","06","07","08","09","10",
-			 "11","12","13","14","15","16","17","18","19","20",
-			 "21","22","23","24","25","26","27","28","29","30","31");
-$m = 0;
-$d = 0;
-$i = 0;
-while ($d <= 30) {
-	if($temp_array[$i] <> "&nbsp;") {
-		$fecha = $anio . "-" . $mes[$m] . "-" . $dia[$d];
-		$sql = "insert ignore into uf (uf_fecha,uf_valor,uf_fechaact) values ('" . $fecha . "'," . $temp_array[$i] .",now())\n";
-		 echo $sql ."\n";
-		$con=mysql_query($sql);
+	if (sizeof($json->serie)!=0) {
+			$sql = "insert ignore into uf (uf_fecha,uf_valor,uf_fechaact) values ('" . 
+				date_format($fecha,'Y-m-d') . "'," . $json->serie[0]->valor .",now())\n";
+			echo $sql;
+			$con=mysql_query($sql);
 	}
-	$m = $m + 1;
-	if ($m == 12){
-		$m = 0;
-		$d = $d + 1;
-	}
+	else
+		$fin =1;
 
-	$i = $i + 1;
+	date_add($fecha, date_interval_create_from_date_string('1 days'));
+
 }
 ?>
