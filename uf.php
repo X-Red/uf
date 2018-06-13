@@ -7,6 +7,11 @@
 // 2014-03-12 jzorrilla@x-red.com - Creo la version inicial basado en un scritp de Henry Lopez
 // 2017-10-23 jzorrilla@x-red.com - Actualizo el script para que utilice webservices desde mindicador.cl
 
+// Valida el numero de argumentos
+if ($argc < 2) {
+	exit( "Uso: php $argv[0] <fecha inicio en formato dd-mm-yyyy>\n" );
+}
+
 
 // Valida que exista archivo de configuracion
 if (file_exists(dirname(__FILE__) . "/config.php")) {
@@ -29,28 +34,34 @@ date_default_timezone_set('America/Santiago');
 mysql_connect($DB_SERVIDOR,$DB_USUARIO,$DB_CLAVE) or die("Imposible conectarse al servidor.");
 mysql_select_db($DB_BASE) or die("Imposible abrir Base de datos");
 
-$fecha = date_create(date("Y-m-d"));
+$fecha = date_create($argv[1]);
 
 $fin = 0;
 
 while (!$fin) {
-	//echo date_format($fecha, 'd-m-Y') . "\n";
-	//echo date_format($fecha,'z') . "\n";
 
 	$jsonsource = $URL . date_format($fecha,'d-m-Y');
 
-	$json = json_decode(file_get_contents($jsonsource));
+	if ($source = file_get_contents($jsonsource)) {
 
-	if (sizeof($json->serie)!=0) {
-			$sql = "insert ignore into uf (uf_fecha,uf_valor,uf_fechaact) values ('" . 
-				date_format($fecha,'Y-m-d') . "'," . $json->serie[0]->valor .",now())\n";
-			echo $sql;
-			$con=mysql_query($sql);
+		echo "Obtiene los datos desde $jsonsource\n";
+
+		$json = json_decode($source);
+
+		if (sizeof($json->serie)!=0) {
+				$sql = "insert ignore into uf (uf_fecha,uf_valor,uf_fechaact) values ('" . 
+					date_format($fecha,'Y-m-d') . "'," . $json->serie[0]->valor .",now())";
+				$con=mysql_query($sql);
+		}
+		else
+			$fin =1;
+
+		date_add($fecha, date_interval_create_from_date_string('1 days'));
+
 	}
-	else
-		$fin =1;
-
-	date_add($fecha, date_interval_create_from_date_string('1 days'));
-
+	else {
+		echo "\nError: No se puede ebtener los datos desde el webservice\n";
+		exit;
+	}
 }
 ?>
