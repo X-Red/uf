@@ -5,7 +5,7 @@ Comienza desde la fecha actual y obtiene los datos que el web service entrega, s
 
 El script se ejecuta con
 
-php uf.php <fecha en formato dd-mm-yyy>
+php uf.php [fecha en formato dd-mm-yyy]
 
 Ejemplo: php uf.php 20-05-2018
 
