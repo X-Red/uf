@@ -10,5 +10,5 @@ $DB_CLAVE    = "clave-super-secreta";
 
 
 // URL desde donde se obtienen los valores de la UF
-$URL = 'http://www.sii.cl/pagina/valores/uf/uf';
+$URL = 'http://mindicador.cl/api/uf/';
 ?>
