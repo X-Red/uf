@@ -1,7 +1,5 @@
 #!/usr/bin/php -q
 <?php
-// Sistema de Aprovisionamiento Web
-//
 // Script que obtiene el valor de la UF desde el SII
 //
 // 2014-03-12 jzorrilla@x-red.com - Creo la version inicial basado en un scritp de Henry Lopez
